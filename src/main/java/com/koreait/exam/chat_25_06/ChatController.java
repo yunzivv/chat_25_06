@@ -11,20 +11,36 @@ import java.util.List;
 public class ChatController {
     
     public List<ChatMessage> chatMessages = new ArrayList<ChatMessage>();
-    public record writeChatMessageResponse(long id){
 
-    }
+    public record writeChatMessageResponse(long id, String authorName, String content) { }
+    public record writeChatMessageRequest(String authorName, String content) { }
+
 
     @PostMapping("/writeMessage")
     @ResponseBody
-    public RsData writeMessage() {
+    public RsData<writeChatMessageResponse> writeMessage(@RequestBody writeChatMessageRequest req) {
 
-        ChatMessage chatMessage = new ChatMessage("yunzi", "hello");
-        chatMessages.add(chatMessage);
+        ChatMessage message = new ChatMessage(req.authorName, req.content);
+        chatMessages.add(message);
+
         return new RsData<>(
                 "S-1",
-                "메세지 작성됨",
-                new writeChatMessageResponse(chatMessage.getId()));
+                "메세지가 작성됨",
+                new writeChatMessageResponse(message.getId(), message.getAuthorName(), message.getContent())
+        );
+    }
+
+    public record messagesResponse(List<ChatMessage> messages, long count) { }
+
+    @GetMapping("/messages")
+    @ResponseBody
+    public RsData<messagesResponse> showMessages() {
+
+        return new RsData<>(
+                "S-1",
+                "성공",
+                new messagesResponse(chatMessages, chatMessages.size())
+        );
     }
 }
 
