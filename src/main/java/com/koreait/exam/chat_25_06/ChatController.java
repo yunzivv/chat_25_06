@@ -1,8 +1,10 @@
 package com.koreait.exam.chat_25_06;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +13,10 @@ import java.util.stream.IntStream;
 @Controller
 @RequestMapping("/chat")
 @Slf4j
+@RequiredArgsConstructor
 public class ChatController {
+
+    private final SseEmitters sseEmitters;
 
     private List<ChatMessage> chatMessages = new ArrayList<>();
 
@@ -23,12 +28,20 @@ public class ChatController {
 
     }
 
+    @GetMapping("/room")
+    public String showRoom() {
+        return "chat/room";
+    }
+
+
     @PostMapping("/writeMessage")
     @ResponseBody
     public RsData<writeChatMessageResponse> writeMessage(@RequestBody writeChatMessageRequest req) {
         ChatMessage message = new ChatMessage(req.authorName, req.content);
 
         chatMessages.add(message);
+
+        sseEmitters.noti("chat__messageAdded");
 
         return new RsData<>(
                 "S-1",
@@ -74,10 +87,5 @@ public class ChatController {
                 "성공",
                 new messagesResponse(messages, messages.size())
         );
-    }
-
-    @GetMapping("/room")
-    public String showRoom() {
-        return "chat/room";
     }
 }
